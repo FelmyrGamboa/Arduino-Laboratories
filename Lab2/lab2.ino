@@ -8,13 +8,30 @@ int offDelay = 0;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
-  Serial.println("=== Cone Volume Calculator ===");
+  Serial.println("\n=== Cone Volume Calculator ===");
   pinMode(ledPin, OUTPUT);
 }
 
 void calcu_vol(float base_val,float height_val) {
   volume = (base_val * height_val)/3;
   Serial.println(volume);
+
+  if (volume < 100) {
+    Serial.println("Flashing: 5s ON, 5s OFF, 3 times");
+    onDelay = 5000;
+    offDelay = 5000;
+  }
+  else if (100 <= volume && volume <= 500){
+    Serial.println("Flashing: 3s ON, 5s OFF, 3 times");
+    onDelay = 3000;
+    offDelay = 5000;
+  }
+  else if (volume > 500){
+    Serial.println("Flashing: 1s ON, 3s OFF, 3 times");
+    onDelay = 1000;
+    offDelay = 3000;
+  }
+  else {}
 };
 
 void loop() {
@@ -62,7 +79,7 @@ void loop() {
     } 
   }
 
-  String height_mess = String(height) + "cm";
+  String height_mess = String(height) + " cm";
   Serial.println(height_mess);
   delay(1000);
 
@@ -71,25 +88,8 @@ void loop() {
   }
 
   calcu_vol(base, height);
-  String vol_mess = "Volume =" + String(volume) + "cm";
+  String vol_mess = "Volume =" + String(volume) + " cm";
   Serial.println(vol_mess);
-  
-  if (volume < 100) {
-    Serial.println("Flashing: 5s ON, 5s OFF, 3 times");
-    onDelay = 5000;
-    offDelay = 5000;
-  }
-  else if (100 <= volume && volume <= 500){
-    Serial.println("Flashing: 3s ON, 5s OFF, 3 times");
-    onDelay = 3000;
-    offDelay = 5000;
-  }
-  else if (volume > 500){
-    Serial.println("Flashing: 1s ON, 3s OFF, 3 times");
-    onDelay = 1000;
-    offDelay = 3000;
-  }
-  else {}
 
   for (int i = 0; i < 3; i++){
     digitalWrite(ledPin,HIGH);
@@ -97,4 +97,5 @@ void loop() {
     digitalWrite(ledPin,LOW);
     delay(offDelay);
   }
+
 }
