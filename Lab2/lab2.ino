@@ -51,15 +51,15 @@ void loop() {
     clearBuffer();
 
     while (base <= 0) {
+      clearBuffer();
       Serial.println("Invalid Base Area Value");
       delay(1000);
       Serial.println("Enter base area value:");
       while (Serial.available() == 0) {}
       base = Serial.parseFloat();
-      clearBuffer();
     }
 
-    String base_mess = String(base) + " cm";
+    String base_mess = "Base: " + String(base) + " cm²";
     Serial.println(base_mess);
     delay(1000);
 
@@ -71,22 +71,22 @@ void loop() {
     clearBuffer();
 
     while (height <= 0) {
+      clearBuffer();
       Serial.println("Invalid Height Value");
       delay(1000);
-      Serial.println("Enter hieght value:");
+      Serial.println("Enter height value:");
       while (Serial.available() == 0) {}
       height = Serial.parseFloat();
-      clearBuffer();
     }
 
-    String height_mess = String(height) + " cm";
+    String height_mess = "Height: " + String(height) + " cm";
     Serial.println(height_mess);
     delay(1000);
     clearBuffer();
     
 
     calcuVol(base, height);
-    String vol_mess = "Volume = " + String(volume) + " cm^3";
+    String vol_mess = ">>> Volume = " + String(volume) + " cm³";
     Serial.println(vol_mess);
 
     for (int i = 0; i < 3; i++){
@@ -97,6 +97,7 @@ void loop() {
     }
 
     while (!choicePrompt){
+      clearBuffer();
       Serial.println("Do you want to find the volume of another cone?");
       Serial.println("Yes - ['0' | 'yes'] ; No - ['1' | 'no']");
 
@@ -114,7 +115,9 @@ void loop() {
         Serial.println("\n=== Cone Volume Calculator ===");
         break;
       } else {
-        Serial.println("Invalid entry, try again.....\n");
+        Serial.print("==================================\n");
+        Serial.println("Invalid entry, try again.....");
+        Serial.print("==================================\n");
       }
     }
   }
