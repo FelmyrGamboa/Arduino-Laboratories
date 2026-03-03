@@ -5,6 +5,7 @@ int ledPin = 2;
 int onDelay = 0;
 int offDelay = 0;
 bool runCalc = true;
+bool choicePrompt = false;
 String userInput = "";
 
 void setup() {
@@ -15,7 +16,7 @@ void setup() {
   pinMode(ledPin, OUTPUT);
 }
 
-void calcu_vol(float base_val,float height_val) {
+void calcuVol(float base_val,float height_val) {
   volume = (base_val * height_val)/3;
 
   if (volume < 100) {
@@ -36,14 +37,18 @@ void calcu_vol(float base_val,float height_val) {
   else {}
 };
 
+void clearBuffer() {
+  while (Serial.available() > 0) {
+    Serial.read();
+  }
+}
+
 void loop() {
   while (runCalc) {
     Serial.println("Enter base area value:");
     while (Serial.available() == 0) {}
     base = Serial.parseFloat();
-    while (Serial.available() > 0) {
-      Serial.read();
-    }
+    clearBuffer();
 
     while (base <= 0) {
       Serial.println("Invalid Base Area Value");
@@ -51,25 +56,19 @@ void loop() {
       Serial.println("Enter base area value:");
       while (Serial.available() == 0) {}
       base = Serial.parseFloat();
-      while (Serial.available() > 0) {
-      Serial.read();
-      } 
+      clearBuffer();
     }
 
     String base_mess = String(base) + " cm";
     Serial.println(base_mess);
     delay(1000);
 
-    while (Serial.available() > 0) {
-    Serial.read();
-    }
+    clearBuffer();
 
     Serial.println("Enter height value:");
     while (Serial.available() == 0) {}
     height = Serial.parseFloat();
-    while (Serial.available() > 0) {
-      Serial.read();
-    }
+    clearBuffer();
 
     while (height <= 0) {
       Serial.println("Invalid Height Value");
@@ -77,21 +76,17 @@ void loop() {
       Serial.println("Enter hieght value:");
       while (Serial.available() == 0) {}
       height = Serial.parseFloat();
-      while (Serial.available() > 0) {
-      Serial.read();
-      } 
+      clearBuffer();
     }
 
     String height_mess = String(height) + " cm";
     Serial.println(height_mess);
     delay(1000);
+    clearBuffer();
+    
 
-    while (Serial.available() > 0) {
-    Serial.read();
-    }
-
-    calcu_vol(base, height);
-    String vol_mess = "Volume = " + String(volume) + " cm";
+    calcuVol(base, height);
+    String vol_mess = "Volume = " + String(volume) + " cm^3";
     Serial.println(vol_mess);
 
     for (int i = 0; i < 3; i++){
@@ -101,28 +96,6 @@ void loop() {
       delay(offDelay);
     }
 
-    // Serial.println("Would you like to find the volume of another cone? [y/n]");
-    // while (Serial.available() > 0) {
-    //   Serial.read();
-    // } 
-    // String response = Serial.readStringUntil('\n');
-    // response.trim();
-
-    // while (true) {
-    //   if (response == "y" || response == "0"){
-    //     runCalc = true;
-    //     break;
-    //   }
-    //   else if (response == "n" || response == "1"){
-    //     runCalc = false;
-    //     break;
-    //   }
-    //   else {
-    //     Serial.println("Invalid Response");
-    //   }
-    // } 
-
-    bool choicePrompt = false;
     while (!choicePrompt){
       Serial.println("Do you want to find the volume of another cone?");
       Serial.println("Yes - ['0' | 'yes'] ; No - ['1' | 'no']");
