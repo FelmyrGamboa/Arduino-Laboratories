@@ -4,17 +4,19 @@ float volume = 0;
 int ledPin = 2;
 int onDelay = 0;
 int offDelay = 0;
+bool runCalc = true;
+String userInput = "";
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
+  Serial.setTimeout(100);
   Serial.println("\n=== Cone Volume Calculator ===");
   pinMode(ledPin, OUTPUT);
 }
 
 void calcu_vol(float base_val,float height_val) {
   volume = (base_val * height_val)/3;
-  Serial.println(volume);
 
   if (volume < 100) {
     Serial.println("Flashing: 5s ON, 5s OFF, 3 times");
@@ -35,67 +37,112 @@ void calcu_vol(float base_val,float height_val) {
 };
 
 void loop() {
-  Serial.println("Enter base area value:");
-  while (Serial.available() == 0) {}
-  base = Serial.parseFloat();
-  while (Serial.available() > 0) {
-    Serial.read();
-  }
-  
-  while (base <= 0) {
-    Serial.println("Invalid Base Area Value");
-    delay(1000);
+  while (runCalc) {
     Serial.println("Enter base area value:");
     while (Serial.available() == 0) {}
     base = Serial.parseFloat();
     while (Serial.available() > 0) {
-    Serial.read();
-    } 
-  }
+      Serial.read();
+    }
 
-  String base_mess = String(base) + "cm";
-  Serial.println(base_mess);
-  delay(1000);
+    while (base <= 0) {
+      Serial.println("Invalid Base Area Value");
+      delay(1000);
+      Serial.println("Enter base area value:");
+      while (Serial.available() == 0) {}
+      base = Serial.parseFloat();
+      while (Serial.available() > 0) {
+      Serial.read();
+      } 
+    }
 
-  while (Serial.available() > 0) {
-  Serial.read();
-  }
-  
-  Serial.println("Enter height value:");
-  while (Serial.available() == 0) {}
-  height = Serial.parseFloat();
-  while (Serial.available() > 0) {
-    Serial.read();
-  }
-
-  while (height <= 0) {
-    Serial.println("Invalid Height Value");
+    String base_mess = String(base) + " cm";
+    Serial.println(base_mess);
     delay(1000);
-    Serial.println("Enter hieght value:");
+
+    while (Serial.available() > 0) {
+    Serial.read();
+    }
+
+    Serial.println("Enter height value:");
     while (Serial.available() == 0) {}
     height = Serial.parseFloat();
     while (Serial.available() > 0) {
+      Serial.read();
+    }
+
+    while (height <= 0) {
+      Serial.println("Invalid Height Value");
+      delay(1000);
+      Serial.println("Enter hieght value:");
+      while (Serial.available() == 0) {}
+      height = Serial.parseFloat();
+      while (Serial.available() > 0) {
+      Serial.read();
+      } 
+    }
+
+    String height_mess = String(height) + " cm";
+    Serial.println(height_mess);
+    delay(1000);
+
+    while (Serial.available() > 0) {
     Serial.read();
-    } 
+    }
+
+    calcu_vol(base, height);
+    String vol_mess = "Volume = " + String(volume) + " cm";
+    Serial.println(vol_mess);
+
+    for (int i = 0; i < 3; i++){
+      digitalWrite(ledPin,HIGH);
+      delay(onDelay);
+      digitalWrite(ledPin,LOW);
+      delay(offDelay);
+    }
+
+    // Serial.println("Would you like to find the volume of another cone? [y/n]");
+    // while (Serial.available() > 0) {
+    //   Serial.read();
+    // } 
+    // String response = Serial.readStringUntil('\n');
+    // response.trim();
+
+    // while (true) {
+    //   if (response == "y" || response == "0"){
+    //     runCalc = true;
+    //     break;
+    //   }
+    //   else if (response == "n" || response == "1"){
+    //     runCalc = false;
+    //     break;
+    //   }
+    //   else {
+    //     Serial.println("Invalid Response");
+    //   }
+    // } 
+
+    bool choicePrompt = false;
+    while (!choicePrompt){
+      Serial.println("Do you want to find the volume of another cone?");
+      Serial.println("Yes - ['0' | 'yes'] ; No - ['1' | 'no']");
+
+      while (Serial.available() == 0) {}
+      userInput = Serial.readString();
+      userInput.trim();
+      userInput.toLowerCase();
+
+      if (userInput == "1" || userInput == "no" || userInput == "n") {
+        Serial.println("\nGoodbye!");
+        runCalc = false;
+        break;
+      } else if (userInput == "0" || userInput == "yes" || userInput == "y"){
+        Serial.println("Restarting......\n");
+        Serial.println("\n=== Cone Volume Calculator ===");
+        break;
+      } else {
+        Serial.println("Invalid entry, try again.....\n");
+      }
+    }
   }
-
-  String height_mess = String(height) + " cm";
-  Serial.println(height_mess);
-  delay(1000);
-
-  while (Serial.available() > 0) {
-  Serial.read();
-  }
-
-  calcu_vol(base, height);
-  String vol_mess = "Volume =" + String(volume) + " cm";
-  Serial.println(vol_mess);
-
-  for (int i = 0; i < 3; i++){
-    digitalWrite(ledPin,HIGH);
-    delay(onDelay);
-    digitalWrite(ledPin,LOW);
-    delay(offDelay);
-  }
-
 }
