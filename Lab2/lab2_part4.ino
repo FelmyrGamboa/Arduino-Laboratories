@@ -11,7 +11,7 @@ void setup() {
   pinMode(outputPin, OUTPUT);      
   Serial.begin(9600);              
   Serial.println("\nCounter Started. Reach 5 to finish!");
-  Serial.println("Count: 0");
+  Serial.println("Count: " + String(counter));
 }
 
 void loop() {
@@ -25,8 +25,6 @@ void loop() {
   if (buttonState != lastButtonState) {
     if (buttonState == LOW) {
       counter++;
-      Serial.print("Count: ");
-      Serial.println(counter);
 
       // Flash LED for feedback
       digitalWrite(outputPin, HIGH);
@@ -34,6 +32,7 @@ void loop() {
       while (digitalRead(buttonPin) == LOW);
       digitalWrite(outputPin, LOW);
       Serial.println("Button Released");
+      Serial.println("Count: " + String(counter));
       // CHECK IF COUNTER REACHED 5
       if (counter >= 5) {
         delay(500);
