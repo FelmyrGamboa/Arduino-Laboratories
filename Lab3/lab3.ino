@@ -19,13 +19,13 @@ void loop() {
   if (analogRead(swPins[0]) == LOW){
     isDone = false;
     pattern1();
-  } else if (analogRead(swPin[1] == LOW)) {
+  } else if (analogRead(swPins[1] == LOW)) {
     isDone = false;
     pattern2();
-  } else if (analogRead(swPin[2] == LOW)) {
+  } else if (analogRead(swPins[2] == LOW)) {
     isDone = false;
     pattern3();
-  } else if (analogRead(swPinp[3]) == LOW) {
+  } else if (analogRead(swPins[3]) == LOW) {
     isDone = false;
     pattern4();
   } else {
@@ -77,9 +77,15 @@ void pattern2() {
 
 void pattern3() {
   if (!isDone) {
-    for (int j=0; j<8; j++) {
+    for (int j=0; j<4; j++) {
       digitalWrite(outPins[j], HIGH);
       digitalWrite(outPins[7-j], HIGH);
+      delay(62.5);
+    }
+
+    for (int j=3; j>=0; j--) {
+      digitalWrite(outPins[j], LOW);
+      digitalWrite(outPins[7-j], LOW);
       delay(62.5);
     }
 
@@ -89,9 +95,11 @@ void pattern3() {
 
 void pattern4() {
   if (!isDone) {
-    int ledPairs[][2] = {{5, 7}, {}}
-    for (int=0; j<8; j++) {
-      
+    int ledPairs[][2] = {{5, 7}, {4, 6}, {3, 5}, {2, 4}, {1, 3}, {0, 2}};
+    for (int j=0; j<6; j++) {
+      digitalWrite(ledPairs[j][0], HIGH);
+      digitalWrite(ledPairs[j][1], HIGH);
+      delay(500);
     }
   }
 }
