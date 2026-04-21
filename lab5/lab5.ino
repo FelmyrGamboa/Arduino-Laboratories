@@ -348,50 +348,40 @@ void runInput3() {
 
 void runInput4() {
   Serial.println("\nEnter a number:");
-
-  int num;
+  long num;
   bool valid = false;
 
   while (!valid) {
     while (Serial.available() == 0) {}
-
     String input = Serial.readStringUntil('\n');
     input.trim();
-
     bool isNumeric = true;
-
     for (int i = 0; i < input.length(); i++) {
       if (!isDigit(input[i])) {
         isNumeric = false;
         break;
       }
     }
-
     if (isNumeric && input.length() > 0) {
       num = input.toInt();
-
       if (num > 0) {
         valid = true;
       } else {
         Serial.println("Invalid input! Please enter a positive number.");
         Serial.println("\nEnter a number:");
       }
-
     } else {
       Serial.println("Invalid input! No letters or symbols allowed.");
       Serial.println("\nEnter a number:");
     }
-
     while (Serial.available() > 0) {
       Serial.read();
     }
   }
-
   Serial.println();
   Serial.print("Multiplication Table for: ");
   Serial.println(num);
   Serial.println("=============================");
-
   for (int i = 1; i <= 10; i++) {
     Serial.print(num);
     Serial.print(" x ");
@@ -399,12 +389,88 @@ void runInput4() {
     Serial.print(" = ");
     Serial.println(num * i);
   }
-
   Serial.println("=============================");
 }
 
 void runInput5() {
+  float radius = 0, height = 0, slantHeight, surfaceArea;
 
+  // 1. Get Radius (Validated)
+  while (true) {
+    Serial.println(F("\nEnter a POSITIVE Radius (r):"));
+    while (Serial.available() == 0) {}
+
+    String input = Serial.readStringUntil('\n');
+    input.trim();
+
+    bool isValid = true;
+
+    if (input.length() == 0) isValid = false;
+
+    for (int i = 0; i < input.length(); i++) {
+      if (!(isDigit(input[i]) || input[i] == '.')) {
+        isValid = false;
+        break;
+      }
+    }
+
+    if (isValid) {
+      radius = input.toFloat();
+
+      if (radius > 0) {
+        Serial.print(F("Radius accepted: "));
+        Serial.println(radius);
+        break;
+      }
+    }
+
+    Serial.println(F(">> Invalid Input! Please enter a positive number (no symbols/letters). <<"));
+  }
+
+  // 2. Get Height (Validated)
+  while (true) {
+    Serial.println(F("\nEnter a POSITIVE Vertical Height (h):"));
+    while (Serial.available() == 0) {}
+
+    String input = Serial.readStringUntil('\n');
+    input.trim();
+
+    bool isValid = true;
+
+    if (input.length() == 0) isValid = false;
+
+    for (int i = 0; i < input.length(); i++) {
+      if (!(isDigit(input[i]) || input[i] == '.')) {
+        isValid = false;
+        break;
+      }
+    }
+
+    if (isValid) {
+      height = input.toFloat();
+
+      if (height > 0) {
+        Serial.print(F("Height accepted: "));
+        Serial.println(height);
+        break;
+      }
+    }
+
+    Serial.println(F(">> Invalid Input! Please enter a positive number (no symbols/letters). <<"));
+  }
+
+  // 3. Calculations
+  slantHeight = sqrt(pow(radius, 2) + pow(height, 2));
+  surfaceArea = PI * radius * (radius + slantHeight);
+
+  // 4. Output Results
+  Serial.println(F("\n--------------------------------"));
+  Serial.print(F("Slant Height (s): "));
+  Serial.println(slantHeight);
+  Serial.print(F("Total Surface Area: "));
+  Serial.print(surfaceArea);
+  Serial.println(F(" sq units"));
+  Serial.println(F("--------------------------------"));
 }
 
 void runInput6() {
