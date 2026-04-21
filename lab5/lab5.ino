@@ -1,28 +1,28 @@
-// C++ code
-//
 #include <Keypad.h>
 
 const byte ROWS = 4;
 const byte COLS = 3;
-
 byte rowPins[ROWS] = {9, 8, 7, 6};
 byte colPins[COLS] = {5, 4, 3};                    
-
 char hexaKeys[ROWS][COLS] = {
   {'1', '2', '3'},
   {'4', '5', '6'},
   {'7', '8', '9'},
   {'*', '0', '#'}
-};
-                                            
+};                                          
 Keypad customKeypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
-
 String keyInput = "";
+
+int ledPins[] = {10, 11, 12, 13, A0, A1, A2, A3}; 
 
 void setup()
 {
   Serial.begin(9600);
   menuPrint();
+
+  for (int i = 0; i < 8; i++){
+    pinMode(ledPins[i], OUTPUT);
+  }
 }
 
 void loop()
@@ -394,8 +394,7 @@ void runInput4() {
 
 void runInput5() {
   float radius = 0, height = 0, slantHeight, surfaceArea;
-
-  // 1. Get Radius (Validated)
+  
   while (true) {
     Serial.println(F("\nEnter a POSITIVE Radius (r):"));
     while (Serial.available() == 0) {}
@@ -413,7 +412,6 @@ void runInput5() {
         break;
       }
     }
-
     if (isValid) {
       radius = input.toFloat();
 
@@ -427,7 +425,6 @@ void runInput5() {
     Serial.println(F(">> Invalid Input! Please enter a positive number (no symbols/letters). <<"));
   }
 
-  // 2. Get Height (Validated)
   while (true) {
     Serial.println(F("\nEnter a POSITIVE Vertical Height (h):"));
     while (Serial.available() == 0) {}
@@ -455,15 +452,11 @@ void runInput5() {
         break;
       }
     }
-
     Serial.println(F(">> Invalid Input! Please enter a positive number (no symbols/letters). <<"));
   }
 
-  // 3. Calculations
   slantHeight = sqrt(pow(radius, 2) + pow(height, 2));
   surfaceArea = PI * radius * (radius + slantHeight);
-
-  // 4. Output Results
   Serial.println(F("\n--------------------------------"));
   Serial.print(F("Slant Height (s): "));
   Serial.println(slantHeight);
@@ -478,13 +471,46 @@ void runInput6() {
 }
 
 void runInput7() {
-
+  for (int i = 0; i < 8; i++) {
+    digitalWrite(ledPins[i], HIGH);
+    delay(375);
+    digitalWrite(ledPins[i], LOW);
+  }
 }
 
 void runInput8() {
-
+  for (int i = 0; i < 4; i++) {
+    digitalWrite(ledPins[i], HIGH);
+  }
+  delay(500); 
+  for (int i = 0; i < 4; i++) {
+    digitalWrite(ledPins[i], LOW);
+  }
+  delay(500);
+  for (int i = 4; i < 8; i++) {
+    digitalWrite(ledPins[i], HIGH);
+  }
+  delay(500);
+  for (int i = 4; i < 8; i++) {
+    digitalWrite(ledPins[i], LOW);
+  }
+  delay(500); 
 }
 
 void runInput9() {
-  
+  Serial.println(F("*******************************"));
+  Serial.println(F(">> ERROR: SYSTEM CRITICAL <<"));
+  Serial.println(F(">> INITIATING ALARM BLINK  <<"));
+  Serial.println(F("*******************************"));
+
+  for (int counter = 0; counter < 4; counter++) {
+    for (int i = 0; i < 8; i++) {
+      digitalWrite(ledPins[i], HIGH);
+    }
+    delay(250);
+    for (int i = 0; i < 8; i++) {
+      digitalWrite(ledPins[i], LOW);
+    }
+    delay(250);
+  }
 }
