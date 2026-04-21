@@ -103,6 +103,7 @@ void loop()
       }
     }
     menuPrint();
+  }
 
   else if (keyInput == '4') {
     input = 'Y';
@@ -123,6 +124,7 @@ void loop()
       }
     }
     menuPrint();
+  }
 
   else if (keyInput == '5') {
     input = 'Y';
@@ -143,6 +145,7 @@ void loop()
       }
     }
     menuPrint();
+  }
 
   else if (keyInput == '6') {
     input = 'Y';
@@ -163,6 +166,7 @@ void loop()
       }
     }
     menuPrint();
+  }
 
   else if (keyInput == '7') {
     input = 'Y';
@@ -183,6 +187,7 @@ void loop()
       }
     }
     menuPrint();
+  }
 
   else if (keyInput == '8') {
     input = 'Y';
@@ -203,6 +208,7 @@ void loop()
       }
     }
     menuPrint();
+  }
 
   else if (keyInput == '9') {
     input = 'Y';
@@ -248,8 +254,6 @@ void menuPrint() {
   Serial.println(F("9. Error + Blink all LEDs for 2s"));
   Serial.println(F("------------------------------"));
   Serial.println(F("Press a key on the keypad..."));
-  
-  
 }
 
 
@@ -294,6 +298,7 @@ void runInput2() {
       for (int j = 0; j < side; j++) {
         Serial.print("* ");
       Serial.println();
+      }
     }
   } else {
     Serial.println("Please enter a valid positive number.");
@@ -342,7 +347,60 @@ void runInput3() {
 }
 
 void runInput4() {
+  Serial.println("\nEnter a number:");
 
+  int num;
+  bool valid = false;
+
+  while (!valid) {
+    while (Serial.available() == 0) {}
+
+    String input = Serial.readStringUntil('\n');
+    input.trim();
+
+    bool isNumeric = true;
+
+    for (int i = 0; i < input.length(); i++) {
+      if (!isDigit(input[i])) {
+        isNumeric = false;
+        break;
+      }
+    }
+
+    if (isNumeric && input.length() > 0) {
+      num = input.toInt();
+
+      if (num > 0) {
+        valid = true;
+      } else {
+        Serial.println("Invalid input! Please enter a positive number.");
+        Serial.println("\nEnter a number:");
+      }
+
+    } else {
+      Serial.println("Invalid input! No letters or symbols allowed.");
+      Serial.println("\nEnter a number:");
+    }
+
+    while (Serial.available() > 0) {
+      Serial.read();
+    }
+  }
+
+  Serial.println();
+  Serial.print("Multiplication Table for: ");
+  Serial.println(num);
+  Serial.println("=============================");
+
+  for (int i = 1; i <= 10; i++) {
+    Serial.print(num);
+    Serial.print(" x ");
+    Serial.print(i);
+    Serial.print(" = ");
+    Serial.println(num * i);
+  }
+
+  Serial.println("=============================");
 }
 
 void runInput5() {
