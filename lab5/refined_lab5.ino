@@ -101,8 +101,10 @@ bool tryAgain() {
     }
     if (line.length() == 0) continue;
     if (line.length() == 1) {
-      if (line[0] == 'Y' || line[0] == 'y') return true;
-      if (line[0] == 'N' || line[0] == 'n') return false;
+      // if (line[0] == 'Y' || line[0] == 'y') return true;
+      // if (line[0] == 'N' || line[0] == 'n') return false;
+      if (line[0] == 'Y' ) return true;
+      if (line[0] == 'N' ) return false;
     }
     Serial.println(F("Invalid! Type ONLY Y or N, then press Enter:"));
   }
@@ -145,8 +147,10 @@ void loop() {
   if (key == '1') {
     do {
       Serial.println(F("--- Pyramid of Stars ---"));
-      Serial.println(F("Enter height, press # or Enter to confirm:"));
-      int h = readInt();
+      // Serial.println(F("Enter height, press # or Enter to confirm:"));
+      // int h = readInt();
+      float h_2 = readFloat(F("Enter height, press # or Enter to confirm:"));
+      unsigned long h = (int)h_2 ;
       for (int i = 1; i <= h; i++) {
         for (int j = 1; j <= (h - i); j++) {
           Serial.print(" ");
@@ -156,6 +160,7 @@ void loop() {
         }
         Serial.println();
       }
+      Serial.println();
     } while (tryAgain());
   }
 
@@ -163,13 +168,16 @@ void loop() {
   else if (key == '2') {
     do {
       Serial.println(F("--- Draw a Square ---"));
-      Serial.println(F("Enter side size (> 0), press # or Enter to confirm:"));
-      int n = readInt();
+      // Serial.println(F("Enter side size (> 0), press # or Enter to confirm:"));
+      // int n = readInt();
+      float n_2 = readFloat(F("Enter side size (> 0), press # or Enter to confirm:"));
+      unsigned long n = (int)n_2 ;
       for (int row = 0; row < n; row++) {
         for (int col = 0; col < n; col++)
           Serial.print((row == 0 || row == n - 1 || col == 0 || col == n - 1) ? '*' : ' ');
         Serial.println();
       }
+      Serial.println();
     } while (tryAgain());
   }
 
@@ -177,8 +185,10 @@ void loop() {
   else if (key == '3') {
     do {
       Serial.println(F("--- Fibonacci Number Series ---"));
-      Serial.println(F("How many numbers? Press # or Enter to confirm:"));
-      int n = readInt();
+      // Serial.println(F("How many numbers? Press # or Enter to confirm:"));
+      // int n = readInt();
+      float n_2 = readFloat(F("How many numbers? Press # or Enter to confirm:"));
+      unsigned long n = (int)n_2 ;
       long a = 0, b = 1;
       for (int i = 0; i < n; i++) {
         Serial.print(a);
@@ -195,8 +205,10 @@ void loop() {
   else if (key == '4') {
     do {
       Serial.println(F("--- Multiplication Table ---"));
-      Serial.println(F("Enter a number (> 0), press # or Enter to confirm:"));
-      unsigned long n = readInt();
+      // Serial.println(F("Enter a number (> 0), press # or Enter to confirm:"));
+      // unsigned long n = readInt();
+      float n_2 = readFloat(F("Enter a number (> 0), press # or Enter to confirm:"));
+      unsigned long n = (int)n_2 ;
       for (int i = 1; i <= 10; i++) {
         Serial.print(n);
         Serial.print(F(" x "));
@@ -274,19 +286,7 @@ void loop() {
     delay(1000);
     for (int right = 4; right < 8; right++) {
       digitalWrite(ledPins[right], LOW);
-    }
-
-    // for (int grp = 0; grp < 2; grp++) {
-    //   Serial.println(grp == 0 ? F("Left 4...") : F("Right 4..."));
-    //   int s = grp * 4;
-    //   for (int blink = 0; blink < 3; blink++) {
-    //     for (int i = s; i < s + 4; i++) digitalWrite(ledPins[i], HIGH);
-    //     delay(400);
-    //     for (int i = s; i < s + 4; i++) digitalWrite(ledPins[i], LOW);
-    //     delay(400);
-    //   }
-    //   if (grp == 0) delay(300);
-    
+    }    
     Serial.println(F("Done."));
   }
 
@@ -304,7 +304,6 @@ void loop() {
     Serial.println(F("Error acknowledged."));
   }
 
-  // else if (key == '0') Serial.println(F("0"));
   else if (key == '*') Serial.println(F("*"));
   else if (key == '#') Serial.println(F("#"));
   else Serial.println(F("INVALID CODE!!!"));
