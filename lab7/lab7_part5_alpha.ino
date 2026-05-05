@@ -2,15 +2,15 @@
 #include <LiquidCrystal_I2C.h>
 #include <Keypad.h>
 
-// --- LCD CONFIG ---
+// --- LCD CONFIGURATION ---
 LiquidCrystal_I2C lcd(0x27, 16, 2); 
 
-// --- KEYPAD CONFIG ---
+// --- KEYPAD CONFIGURATION ---
 const byte ROWS = 4; 
 const byte COLS = 3; 
 char keys[ROWS][COLS] = {
-  {'1','2','3'}, // 1, 2, 3 used for Song Selection
-  {'4','5','6'}, // 4 = DON, 5 = MENU/BACK, 6 = KA
+  {'1','2','3'},
+  {'4','5','6'}, // 4 = DON, 5 = SELECT, 6 = KA
   {'7','8','9'},
   {'*','0','#'}
 };
@@ -18,72 +18,44 @@ byte rowPins[ROWS] = {10, 9, 8, 7};
 byte colPins[COLS] = {6, 5, 4}; 
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 
-// --- PINS & CONSTANTS ---
-const int BUZZER_PIN = 2;
+// --- HARDWARE PINS ---
+const int BUZZER_PIN = 2; 
+
+// --- GAME CONSTANTS ---
 #define NOTE_DON 1   
 #define NOTE_KA  2   
 
-// Musical Frequencies
-#define C4  262
-#define D4  294
-#define E4  330
-#define F4  349
-#define G4  392
-#define A4  440
-#define B4  494
-#define C5  523
+// Timing Windows (ms)
+const int WINDOW_PERFECT = 80;
+const int WINDOW_GOOD    = 180;
+const int SCROLL_SPEED   = 50; 
 
-// --- GAME STRUCTURES ---
+// --- CUSTOM CHARACTERS ---
+byte charDon[8] = {0b00000, 0b01110, 0b11111, 0b11111, 0b11111, 0b01110, 0b00000, 0b00000}; 
+byte charKa[8]  = {0b00000, 0b01110, 0b10001, 0b10001, 0b10001, 0b01110, 0b00000, 0b00000}; 
+
+// --- GAME STATE ---
+enum GameState { START, COUNTDOWN, PLAYING, GAMEOVER };
+GameState currentState = START;
+
 struct Note {
   unsigned long targetTime;
-  int frequency;
-  int type; // Randomly assigned as DON or KA
+  int type;
   bool processed;
-  bool soundPlayed;
 };
 
-// Max notes per song
-const int MAX_NOTES = 20;
-Note currentSong[MAX_NOTES];
-int currentSongLength = 0;
-
-enum GameState { MENU, COUNTDOWN, PLAYING, GAMEOVER };
-GameState currentState = MENU;
+Note song[] = {
+  {2000, NOTE_DON, false}, {2600, NOTE_DON, false}, {3200, NOTE_KA, false},
+  {4000, NOTE_DON, false}, {4400, NOTE_KA, false},  {4800, NOTE_DON, false},
+  {6000, NOTE_KA, false},  {6300, NOTE_KA, false},  {6600, NOTE_DON, false},
+  {7500, NOTE_DON, false}, {8500, NOTE_KA, false},  {10000, NOTE_DON, false}
+};
+const int songLength = sizeof(song) / sizeof(song[0]);
 
 unsigned long gameStartTime = 0;
 int score = 0;
-
-// --- SONG DATA ---
-void loadSong(int choice) {
-  randomSeed(analogRead(A1)); // Seed randomness using floating pin
-  score = 0;
-  
-  if (choice == 1) { // Twinkle Twinkle (Simple)
-    int mel[] = {C4, C4, G4, G4, A4, A4, G4, F4, F4, E4, E4, D4, D4, C4};
-    currentSongLength = 14;
-    for(int i=0; i<currentSongLength; i++) {
-      currentSong[i] = { (unsigned long)(2000 + (i * 800)), mel[i], random(1, 3), false, false };
-    }
-  } 
-  else if (choice == 2) { // Jingle Bells (Faster)
-    int mel[] = {E4, E4, E4, E4, E4, E4, E4, G4, C4, D4, E4};
-    currentSongLength = 11;
-    for(int i=0; i<currentSongLength; i++) {
-      currentSong[i] = { (unsigned long)(2000 + (i * 500)), mel[i], random(1, 3), false, false };
-    }
-  }
-  else if (choice == 3) { // Challenge Scale
-    currentSongLength = 8;
-    int mel[] = {C4, D4, E4, F4, G4, A4, B4, C5};
-    for(int i=0; i<currentSongLength; i++) {
-      currentSong[i] = { (unsigned long)(2000 + (i * 400)), mel[i], random(1, 3), false, false };
-    }
-  }
-}
-
-// --- CUSTOM CHARS ---
-byte charDon[8] = {0b00000, 0b01110, 0b11111, 0b11111, 0b11111, 0b01110, 0b00000, 0b00000}; 
-byte charKa[8]  = {0b00000, 0b01110, 0b10001, 0b10001, 0b10001, 0b01110, 0b00000, 0b00000}; 
+int combo = 0;
+String lastFeedback = "";
 
 void setup() {
   pinMode(BUZZER_PIN, OUTPUT);
@@ -91,37 +63,44 @@ void setup() {
   lcd.backlight();
   lcd.createChar(1, charDon);
   lcd.createChar(2, charKa);
-  showMenu();
+  showStartScreen();
 }
 
 void loop() {
-  char key = keypad.getKey();
+  char key = keypad.getKey(); // Non-blocking key detection
 
   switch (currentState) {
-    case MENU:
-      if (key == '1') { loadSong(1); currentState = COUNTDOWN; }
-      if (key == '2') { loadSong(2); currentState = COUNTDOWN; }
-      if (key == '3') { loadSong(3); currentState = COUNTDOWN; }
+    case START:
+      if (key == '5') startGame();
       break;
-
+    
     case COUNTDOWN:
       runCountdown();
       break;
-
+      
     case PLAYING:
       updateGame(key);
       break;
-
+      
     case GAMEOVER:
-      if (key == '5') showMenu();
+      if (key == '5') resetGame();
       break;
   }
+}
+
+void startGame() {
+  score = 0;
+  combo = 0;
+  lastFeedback = "READY?";
+  for(int i=0; i<songLength; i++) song[i].processed = false;
+  currentState = COUNTDOWN;
 }
 
 void runCountdown() {
   for (int i = 3; i > 0; i--) {
     lcd.clear();
-    lcd.setCursor(7, 0); lcd.print(i);
+    lcd.setCursor(7, 0);
+    lcd.print(i);
     tone(BUZZER_PIN, 440, 100);
     delay(1000);
   }
@@ -129,88 +108,92 @@ void runCountdown() {
   currentState = PLAYING;
 }
 
-void updateGame(char key) {
+void updateGame(char pressedKey) {
   unsigned long currentTime = millis() - gameStartTime;
+  
   lcd.clear();
-  lcd.setCursor(0, 0); lcd.print(">"); // Hit zone
+  lcd.setCursor(0, 0);
+  lcd.print(">"); // Hit Zone
 
-  bool allNotesDone = true;
-
-  for (int i = 0; i < currentSongLength; i++) {
-    if (!currentSong[i].processed) {
-      allNotesDone = false;
-      long timeDiff = (long)currentSong[i].targetTime - (long)currentTime;
-      int xPos = timeDiff / 150; // Scroll speed
-
-      // Display note
+  // Note Rendering
+  for (int i = 0; i < songLength; i++) {
+    if (!song[i].processed) {
+      long timeDiff = (long)song[i].targetTime - (long)currentTime;
+      int xPos = timeDiff / SCROLL_SPEED;
+      
       if (xPos >= 0 && xPos < 16) {
         lcd.setCursor(xPos, 0);
-        lcd.write(currentSong[i].type);
+        lcd.write(song[i].type);
       }
-
-      // Play the musical note when it hits the target time
-      if (timeDiff <= 0 && !currentSong[i].soundPlayed) {
-        tone(BUZZER_PIN, currentSong[i].frequency, 100);
-        currentSong[i].soundPlayed = true;
+      
+      if (timeDiff < -WINDOW_GOOD) {
+        song[i].processed = true;
+        handleHit(0); 
       }
+    }
+  }
 
-      // SUDDEN DEATH: If note passes without being hit
-      if (timeDiff < -150) { 
-        triggerGameOver("MISS! GAME OVER");
+  // Keypad Input Logic
+  if (pressedKey) {
+    if (pressedKey == '4') checkTiming(currentTime, NOTE_DON);
+    if (pressedKey == '6') checkTiming(currentTime, NOTE_KA);
+  }
+
+  lcd.setCursor(0, 1);
+  lcd.print(lastFeedback);
+  lcd.setCursor(11, 1);
+  lcd.print("C:"); lcd.print(combo);
+
+  if (currentTime > song[songLength-1].targetTime + 1500) {
+    currentState = GAMEOVER;
+    showGameOver();
+  }
+  
+  delay(20); 
+}
+
+void checkTiming(unsigned long currentTime, int hitType) {
+  for (int i = 0; i < songLength; i++) {
+    if (!song[i].processed) {
+      long diff = abs((long)currentTime - (long)song[i].targetTime);
+      if (diff <= WINDOW_GOOD) {
+        song[i].processed = true;
+        if (hitType != song[i].type) handleHit(0);
+        else if (diff <= WINDOW_PERFECT) handleHit(2);
+        else handleHit(1);
         return;
       }
     }
   }
+}
 
-  // Handle Input
-  if (key == '4' || key == '6') {
-    int hitType = (key == '4') ? NOTE_DON : NOTE_KA;
-    checkHit(currentTime, hitType);
-  }
-
-  lcd.setCursor(0, 1);
-  lcd.print("Score:"); lcd.print(score);
-
-  if (allNotesDone) {
-    delay(1000);
-    triggerGameOver("SONG CLEAR!");
+void handleHit(int quality) {
+  if (quality == 2) { 
+    score += 100; combo++; lastFeedback = "PERFECT!";
+    tone(BUZZER_PIN, 600, 60);
+  } else if (quality == 1) { 
+    score += 50; combo++; lastFeedback = "GOOD";
+    tone(BUZZER_PIN, 450, 60);
+  } else { 
+    combo = 0; lastFeedback = "MISS";
+    tone(BUZZER_PIN, 150, 150);
   }
 }
 
-void checkHit(unsigned long currentTime, int hitType) {
-  for (int i = 0; i < currentSongLength; i++) {
-    if (!currentSong[i].processed) {
-      long diff = abs((long)currentTime - (long)currentSong[i].targetTime);
-      
-      if (diff < 200) { // Within hit window
-        if (hitType == currentSong[i].type) {
-          currentSong[i].processed = true;
-          score += 100;
-          return;
-        } else {
-          // SUDDEN DEATH: Wrong button
-          triggerGameOver("WRONG! GAME OVER");
-          return;
-        }
-      }
-    }
-  }
-}
-
-void triggerGameOver(String msg) {
-  currentState = GAMEOVER;
-  tone(BUZZER_PIN, 150, 500);
+void showStartScreen() {
   lcd.clear();
-  lcd.print(msg);
-  lcd.setCursor(0, 1);
-  lcd.print("Score:"); lcd.print(score);
-  lcd.print("  [5]");
+  lcd.setCursor(3, 0); lcd.print("TAIKO 4x3");
+  lcd.setCursor(0, 1); lcd.print("Press 5 to Start");
 }
 
-void showMenu() {
-  currentState = MENU;
+void showGameOver() {
   lcd.clear();
-  lcd.print("Pick: 1, 2, or 3");
-  lcd.setCursor(0, 1);
-  lcd.print("1:Twnkl 2:Jngl 3:Scl");
+  lcd.print("FINAL SCORE:");
+  lcd.setCursor(0, 1); lcd.print(score);
+  lcd.print(" - Press 5");
+}
+
+void resetGame() {
+  currentState = START;
+  showStartScreen();
 }
