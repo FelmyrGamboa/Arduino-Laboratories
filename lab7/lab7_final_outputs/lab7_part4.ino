@@ -51,12 +51,13 @@ void wrongPattern();
 void setup() {
   lcd.init();
   lcd.backlight();
-  Serial.begin(9600);                    // Start serial communication
-  Serial.println("Enter your name and press Enter:");  // Prompt in Serial Monitor
-  
+  Serial.begin(9600);
+  Serial.println("Enter your name and press Enter:");
+
   pinMode(buzzerPin, OUTPUT);
   for (int i = 0; i < 6; i++) pinMode(ledPins[i], OUTPUT);
 
+  // Show initial prompt (like original)
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("ENTER YOUR NAME:");
@@ -65,32 +66,42 @@ void setup() {
 }
 
 void loop() {
-  // Name entry: read from Serial Monitor
+  // NAME ENTRY – from Serial Monitor, displays on LCD instantly
   if (progState == ENTER_NAME) {
     while (Serial.available() > 0 && progState == ENTER_NAME) {
       char key = Serial.read();
-      if (key >= 32 && key <= 126) {     // Printable ASCII characters
+
+      if (key >= 32 && key <= 126) {               // printable ASCII
         inputBuffer += key;
-        updateDisplay();
-      } 
-      else if ((key == 0x08 || key == 0x7F) && inputBuffer.length() > 0) {  // Backspace / DEL
+        // Update only the second line – no full lcd.clear()
+        lcd.setCursor(0, 1);
+        lcd.print(inputBuffer);
+        // Erase any leftover characters after the name
+        lcd.print("                ");             // 16 spaces
+        lcd.setCursor(inputBuffer.length(), 1);
+      }
+      else if ((key == 0x08 || key == 0x7F) && inputBuffer.length() > 0) { // backspace
         inputBuffer.remove(inputBuffer.length() - 1);
-        updateDisplay();
-      } 
-      else if (key == 0x0D || key == 0x0A) {   // Enter (CR or LF)
+        lcd.setCursor(0, 1);
+        lcd.print(inputBuffer);
+        lcd.print("                ");
+        lcd.setCursor(inputBuffer.length(), 1);
+      }
+      else if (key == 0x0D || key == 0x0A) {       // Enter (CR or LF)
         if (inputBuffer.length() > 0) {
-          processInput();   // This will change state to ENTER_PASSWORD
+          processInput();         // store name, go to password
         }
-        // After processing, the while loop condition will check progState and exit
+        inputBuffer = "";
       }
     }
   }
-  // Password entry: read from keypad (unchanged)
+  // PASSWORD ENTRY – keypad with key‑press beep (unchanged)
   else if (progState == ENTER_PASSWORD) {
     if (keypad.getKeys()) {
       for (int i = 0; i < LIST_MAX; i++) {
         if (keypad.key[i].stateChanged && keypad.key[i].kstate == PRESSED) {
           char key = keypad.key[i].kchar;
+          tone(buzzerPin, 1000, 50);   // beep on every press
 
           if (key >= '0' && key <= '9') {
             inputBuffer += key;
@@ -104,6 +115,7 @@ void loop() {
           }
           else if (key == '#') {
             if (inputBuffer.length() > 0) {
+              noTone(buzzerPin);       // stop beep before processing
               processInput();
               inputBuffer = "";
             }
@@ -112,41 +124,33 @@ void loop() {
       }
     }
   }
-  // Access granted / denied blinking (unchanged)
+  // ACCESS GRANTED / DENIED blinking messages (unchanged)
   else if (progState == ACCESS_GRANTED || progState == ACCESS_DENIED) {
     unsigned long now = millis();
     if (now - lastBlinkTime >= blinkInterval) {
       blinkState = !blinkState;
       lastBlinkTime = now;
 
+      lcd.clear();
       if (progState == ACCESS_GRANTED) {
-        lcd.clear();
         if (blinkState) {
           lcd.setCursor(0, 0);
           lcd.print("WELCOME, " + userName + "!!!!");
-        } else {
-          lcd.setCursor(0, 0);
-          lcd.print("                ");
         }
       }
       else if (progState == ACCESS_DENIED) {
-        lcd.clear();
         if (blinkState) {
           lcd.setCursor(0, 0);
           lcd.print("ACCESS DENIED!!!");
           lcd.setCursor(0, 1);
           lcd.print(String(attempts) + " ATTEMPT ALREADY");
-        } else {
-          lcd.setCursor(0, 0);
-          lcd.print("                ");
-          lcd.setCursor(0, 1);
-          lcd.print("                ");
         }
       }
     }
   }
 }
 
+// Restored to original behaviour – name is NOT shown on password screen
 void updateDisplay() {
   lcd.clear();
   if (progState == ENTER_NAME) {
@@ -157,7 +161,7 @@ void updateDisplay() {
   }
   else if (progState == ENTER_PASSWORD) {
     lcd.setCursor(0, 0);
-    lcd.print("ENTER PASSWORD:");
+    lcd.print("ENTER PASSWORD:");      // exactly like the original
     lcd.setCursor(0, 1);
     String masked = "";
     for (unsigned int i = 0; i < inputBuffer.length(); i++) masked += '*';
@@ -171,7 +175,8 @@ void processInput() {
     inputBuffer = "";
     attempts = 0;
     progState = ENTER_PASSWORD;
-    updateDisplay();
+    Serial.print(userName);
+    updateDisplay();   // shows original “ENTER PASSWORD:” now
   }
   else if (progState == ENTER_PASSWORD) {
     if (inputBuffer == correctPassword) {
