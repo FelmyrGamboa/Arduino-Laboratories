@@ -159,11 +159,13 @@ void executeHash() {
       double a = numFirst.toDouble();
       double b = numSecond.toDouble();
       double result = calculate(a, op, b);
-      String resStr = formatResult(result);
+      String resStr = String(result);
 
-      String firstDisp  = formatNumberDisplay(numFirst);
-      String secondDisp = formatNumberDisplay(numSecond);
-      String resultDisp = resStr;   // already 2 decimals
+      // String firstDisp  = formatNumberDisplay(numFirst);
+      String firstDisp = numFirst;
+      // String secondDisp = formatNumberDisplay(numSecond);
+      String secondDisp = numSecond;
+      String resultDisp = formatNumberDisplay(resStr);   // already 2 decimals
 
       lcd.clear();
       lcd.setCursor(0, 0);
@@ -207,7 +209,8 @@ void updateDisplay() {
       lcd.print(numFirst.length() ? numFirst : "0");
     }
     else if (currentState == WAITING_SECOND) {
-      String firstDisp = formatNumberDisplay(numFirst);
+      // String firstDisp = formatNumberDisplay(numFirst);
+      String firstDisp = numFirst;
       lcd.print(firstDisp);
 
       char showOp = (!operatorConfirmed) ? ((preview != '\0') ? preview : op) : op;
