@@ -17,7 +17,7 @@ byte colPins[COLS] = {5, 4, 3};
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 
 const int buzzerPin = 2;
-const int ledPins[6] = {22, 24, 26, 28, 30, 32};  // 6 LEDs
+const int ledPins[6] = {22, 24, 26, 28, 30, 32};
 
 enum ProgramState {
   ENTER_NAME,
@@ -51,13 +51,13 @@ void wrongPattern();
 void setup() {
   lcd.init();
   lcd.backlight();
+  lcd.clear();
   Serial.begin(9600);
   Serial.println("Enter your name and press Enter:");
 
   pinMode(buzzerPin, OUTPUT);
   for (int i = 0; i < 6; i++) pinMode(ledPins[i], OUTPUT);
 
-  // Show initial prompt (like original)
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("ENTER YOUR NAME:");
@@ -66,42 +66,39 @@ void setup() {
 }
 
 void loop() {
-  // NAME ENTRY – from Serial Monitor, displays on LCD instantly
   if (progState == ENTER_NAME) {
     while (Serial.available() > 0 && progState == ENTER_NAME) {
       char key = Serial.read();
 
-      if (key >= 32 && key <= 126) {               // printable ASCII
+      if (key >= 32 && key <= 126) {
         inputBuffer += key;
-        // Update only the second line – no full lcd.clear()
         lcd.setCursor(0, 1);
         lcd.print(inputBuffer);
-        // Erase any leftover characters after the name
-        lcd.print("                ");             // 16 spaces
+        lcd.print("                ");
         lcd.setCursor(inputBuffer.length(), 1);
       }
-      else if ((key == 0x08 || key == 0x7F) && inputBuffer.length() > 0) { // backspace
+      else if ((key == 0x08 || key == 0x7F) && inputBuffer.length() > 0) {
         inputBuffer.remove(inputBuffer.length() - 1);
         lcd.setCursor(0, 1);
         lcd.print(inputBuffer);
         lcd.print("                ");
         lcd.setCursor(inputBuffer.length(), 1);
       }
-      else if (key == 0x0D || key == 0x0A) {       // Enter (CR or LF)
+      else if (key == 0x0D || key == 0x0A) {
         if (inputBuffer.length() > 0) {
-          processInput();         // store name, go to password
+          processInput();
         }
         inputBuffer = "";
       }
     }
   }
-  // PASSWORD ENTRY – keypad with key‑press beep (unchanged)
+
   else if (progState == ENTER_PASSWORD) {
     if (keypad.getKeys()) {
       for (int i = 0; i < LIST_MAX; i++) {
         if (keypad.key[i].stateChanged && keypad.key[i].kstate == PRESSED) {
           char key = keypad.key[i].kchar;
-          tone(buzzerPin, 1000, 50);   // beep on every press
+          tone(buzzerPin, 1000, 50);
 
           if (key >= '0' && key <= '9') {
             inputBuffer += key;
@@ -115,7 +112,7 @@ void loop() {
           }
           else if (key == '#') {
             if (inputBuffer.length() > 0) {
-              noTone(buzzerPin);       // stop beep before processing
+              noTone(buzzerPin);
               processInput();
               inputBuffer = "";
             }
@@ -124,7 +121,7 @@ void loop() {
       }
     }
   }
-  // ACCESS GRANTED / DENIED blinking messages (unchanged)
+
   else if (progState == ACCESS_GRANTED || progState == ACCESS_DENIED) {
     unsigned long now = millis();
     if (now - lastBlinkTime >= blinkInterval) {
@@ -150,7 +147,6 @@ void loop() {
   }
 }
 
-// Restored to original behaviour – name is NOT shown on password screen
 void updateDisplay() {
   lcd.clear();
   if (progState == ENTER_NAME) {
@@ -161,7 +157,7 @@ void updateDisplay() {
   }
   else if (progState == ENTER_PASSWORD) {
     lcd.setCursor(0, 0);
-    lcd.print("ENTER PASSWORD:");      // exactly like the original
+    lcd.print("ENTER PASSWORD:");
     lcd.setCursor(0, 1);
     String masked = "";
     for (unsigned int i = 0; i < inputBuffer.length(); i++) masked += '*';
@@ -176,7 +172,7 @@ void processInput() {
     attempts = 0;
     progState = ENTER_PASSWORD;
     Serial.print(userName);
-    updateDisplay();   // shows original “ENTER PASSWORD:” now
+    updateDisplay();
   }
   else if (progState == ENTER_PASSWORD) {
     if (inputBuffer == correctPassword) {
@@ -220,7 +216,7 @@ void denyAccess() {
   lcd.setCursor(0, 0);
   lcd.print("ACCESS DENIED!!!");
   lcd.setCursor(0, 1);
-  lcd.print(String(attempts) + " ATTEMPT ALREADY");
+  lcd.print(String(attempts) + "ATTEMPT ALREADY");
   delay(2000);
   blinkState = false;
   lastBlinkTime = millis();
@@ -236,7 +232,7 @@ void playToneSequence(const int* notes, const int* durations, int len) {
 
 void runLEDsLeftRight(int times) {
   for (int t = 0; t < times; t++) {
-    for (int i = 0; i < 6; i++) {
+    for (int i = 5; i >= 0; i--) {
       digitalWrite(ledPins[i], HIGH);
       delay(80);
       digitalWrite(ledPins[i], LOW);
