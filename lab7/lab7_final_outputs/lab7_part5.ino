@@ -103,6 +103,7 @@ void setup() {
   pinMode(BUZZER_PIN, OUTPUT);
   lcd.init();
   lcd.backlight();
+  lcd.clear();
   lcd.createChar(1, charDon);
   lcd.createChar(2, charKa);
   lcd.createChar(3, charLeft);
