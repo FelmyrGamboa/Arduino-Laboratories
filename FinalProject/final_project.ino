@@ -11,8 +11,8 @@ const int servoPin1    = 9;    // Eject servo 1 (1.5s hold)
 const int servoPin2    = 8;    // Eject servo 2 (1s hold)
 const int sweepServoPin = 10;  // SG-5010 sweep (only during PLAYING)
 const int segA = 32, segB = 34, segC = 36, segD = 38, segE = 40, segF = 42, segG = 44; // 7‑seg
-const int controlBtn = 49;     // Single start/reset button (active LOW)
-const int BUZZER_PIN = 2;      // Passive buzzer
+const int controlBtn = 6;     // Single start/reset button (active LOW)
+const int BUZZER_PIN = 7;      // Passive buzzer
 
 // ---------- Servo positions ----------
 const int SERVO_HOME = 90;
